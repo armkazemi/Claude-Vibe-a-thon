@@ -375,301 +375,244 @@
         </div>
     </div>
 
-    <script>
-        // Mock data structure - In production, this would fetch from Princeton's API
-        const mockMenuData = {
-            "monday": {
-                "breakfast": {
-                    "Frist": ["Scrambled Eggs", "Bacon", "Hash Browns", "Pancakes", "Fresh Fruit", "Yogurt"],
-                    "Whitman": ["Omelets", "Sausage", "French Toast", "Bagels", "Oatmeal", "Fresh Juice"],
-                    "Butler": ["Eggs Benedict", "Turkey Bacon", "Waffles", "Granola", "Smoothies"]
-                },
-                "lunch": {
-                    "Frist": ["Chicken Sandwich", "Caesar Salad", "Tomato Soup", "French Fries", "Apple Pie"],
-                    "Whitman": ["Grilled Chicken", "Greek Salad", "Minestrone Soup", "Roasted Vegetables", "Chocolate Cake"],
-                    "Butler": ["Turkey Club", "Garden Salad", "Chicken Noodle Soup", "Sweet Potato Fries", "Ice Cream"],
-                    "CJL": ["Stir Fry Bar", "Fried Rice", "Spring Rolls", "Dumplings", "Fortune Cookies"]
-                },
-                "dinner": {
-                    "Frist": ["Grilled Salmon", "Roast Chicken", "Pasta Primavera", "Steamed Broccoli", "Tiramisu"],
-                    "Whitman": ["Beef Tenderloin", "Baked Cod", "Vegetable Lasagna", "Green Beans", "Cheesecake"],
-                    "Butler": ["BBQ Ribs", "Teriyaki Chicken", "Eggplant Parmesan", "Corn on the Cob", "Brownies"],
-                    "CJL": ["Sushi Bar", "Ramen", "Tempura", "Edamame", "Mochi Ice Cream"]
-                }
-            },
-            "tuesday": {
-                "breakfast": {
-                    "Frist": ["Scrambled Eggs", "Sausage", "Home Fries", "Waffles", "Fruit Salad", "Cereal"],
-                    "Whitman": ["Egg White Omelet", "Bacon", "Pancakes", "Muffins", "Yogurt Parfait"],
-                    "Butler": ["Breakfast Burrito", "Turkey Sausage", "French Toast", "Fresh Berries", "Coffee Cake"]
-                },
-                "lunch": {
-                    "Frist": ["Buffalo Chicken Wrap", "Spinach Salad", "Clam Chowder", "Onion Rings", "Cookies"],
-                    "Whitman": ["Philly Cheesesteak", "Cobb Salad", "Broccoli Cheddar Soup", "Tater Tots", "Fruit Tart"],
-                    "Butler": ["Chicken Tenders", "Asian Salad", "Lentil Soup", "Mac and Cheese", "Cupcakes"],
-                    "CJL": ["Poke Bowl", "Miso Soup", "California Roll", "Seaweed Salad", "Green Tea Cake"]
-                },
-                "dinner": {
-                    "Frist": ["Herb Roasted Turkey", "Grilled Shrimp", "Mushroom Risotto", "Asparagus", "Lemon Bars"],
-                    "Whitman": ["Prime Rib", "Honey Glazed Ham", "Stuffed Peppers", "Brussels Sprouts", "Apple Crisp"],
-                    "Butler": ["Chicken Parmesan", "Grilled Swordfish", "Penne Alfredo", "Zucchini", "Carrot Cake"],
-                    "CJL": ["Korean BBQ", "Bibimbap", "Kimchi", "Japchae", "Red Bean Buns"]
-                }
-            },
-            "wednesday": {
-                "breakfast": {
-                    "Frist": ["Poached Eggs", "Ham", "Potato Pancakes", "Crepes", "Melon", "Breakfast Sandwich"],
-                    "Whitman": ["Veggie Omelet", "Chicken Sausage", "Blueberry Pancakes", "Croissants", "Greek Yogurt"],
-                    "Butler": ["Huevos Rancheros", "Chorizo", "Cinnamon French Toast", "Pineapple", "Scones"]
-                },
-                "lunch": {
-                    "Frist": ["Margherita Pizza", "Caprese Salad", "Pasta e Fagioli", "Garlic Bread", "Gelato"],
-                    "Whitman": ["BBQ Chicken Pizza", "Kale Salad", "Butternut Squash Soup", "Breadsticks", "Tiramisu"],
-                    "Butler": ["Veggie Burger", "Quinoa Salad", "Black Bean Soup", "Sweet Potato Wedges", "Sorbet"],
-                    "CJL": ["Pad Thai", "Tom Yum Soup", "Summer Rolls", "Fried Bananas", "Mango Sticky Rice"]
-                },
-                "dinner": {
-                    "Frist": ["Filet Mignon", "Lobster Tail", "Wild Mushroom Ravioli", "Grilled Vegetables", "Crème Brûlée"],
-                    "Whitman": ["Pork Chops", "Baked Salmon", "Butternut Squash Ravioli", "Roasted Cauliflower", "Chocolate Mousse"],
-                    "Butler": ["Meatloaf", "Fish and Chips", "Baked Ziti", "Green Bean Casserole", "Pound Cake"],
-                    "CJL": ["Dim Sum", "Hot and Sour Soup", "Peking Duck", "Bok Choy", "Sesame Balls"]
-                }
-            }
-        };
+   <script>
+    const API_URL = 'http://localhost:3000/api';
+    
+    let currentPollData = null;
+    let pollVotes = [];
 
-        // Replicate data for other days
-        mockMenuData.thursday = mockMenuData.monday;
-        mockMenuData.friday = mockMenuData.tuesday;
-        mockMenuData.saturday = mockMenuData.wednesday;
-        mockMenuData.sunday = mockMenuData.monday;
+    function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.service').forEach(s => s.classList.remove('active'));
+        
+        event.target.classList.add('active');
+        document.getElementById(tab).classList.add('active');
+    }
 
-        let currentPollData = null;
-        let pollVotes = [];
-
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.service').forEach(s => s.classList.remove('active'));
-            
-            event.target.classList.add('active');
-            document.getElementById(tab).classList.add('active');
+    async function searchFood() {
+        const query = document.getElementById('searchInput').value.trim().toLowerCase();
+        const resultsContainer = document.getElementById('searchResults');
+        
+        if (!query) {
+            resultsContainer.innerHTML = '<div class="error">Please enter a food item to search.</div>';
+            return;
         }
 
-        function searchFood() {
-            const query = document.getElementById('searchInput').value.trim().toLowerCase();
-            const resultsContainer = document.getElementById('searchResults');
-            
-            if (!query) {
-                resultsContainer.innerHTML = '<div class="error">Please enter a food item to search.</div>';
-                return;
+        resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Searching menus...</div>';
+
+        try {
+            const response = await fetch(`${API_URL}/search?query=${encodeURIComponent(query)}`);
+            const results = await response.json();
+
+            if (results.error) {
+                throw new Error(results.error);
             }
 
-            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Searching menus...</div>';
-
-            setTimeout(() => {
-                const results = [];
-                
-                for (const [day, meals] of Object.entries(mockMenuData)) {
-                    for (const [meal, halls] of Object.entries(meals)) {
-                        for (const [hall, items] of Object.entries(halls)) {
-                            items.forEach(item => {
-                                if (item.toLowerCase().includes(query)) {
-                                    results.push({
-                                        item: item,
-                                        hall: hall,
-                                        day: day.charAt(0).toUpperCase() + day.slice(1),
-                                        meal: meal.charAt(0).toUpperCase() + meal.slice(1)
-                                    });
-                                }
-                            });
-                        }
-                    }
-                }
-
-                if (results.length === 0) {
-                    resultsContainer.innerHTML = `<div class="error">No results found for "${query}". Try searching for common items like pizza, chicken, or salad.</div>`;
-                } else {
-                    let html = `<h3 style="margin-bottom: 20px;">Found ${results.length} result${results.length > 1 ? 's' : ''} for "${query}"</h3>`;
-                    results.forEach(result => {
-                        html += `
-                            <div class="result-card">
-                                <h3>${result.item}</h3>
-                                <div class="result-info">
-                                    <span class="info-tag">🏢 ${result.hall}</span>
-                                    <span class="info-tag">📅 ${result.day}</span>
-                                    <span class="info-tag">🍽️ ${result.meal}</span>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    resultsContainer.innerHTML = html;
-                }
-            }, 500);
-        }
-
-        function createPoll() {
-            const day = document.getElementById('pollDay').value;
-            const meal = document.getElementById('pollMeal').value;
-            
-            const pollId = Math.random().toString(36).substr(2, 9);
-            const pollUrl = `${window.location.href.split('?')[0]}?poll=${pollId}&day=${day}&meal=${meal}`;
-            
-            currentPollData = {
-                id: pollId,
-                day: day,
-                meal: meal,
-                votes: []
-            };
-            
-            localStorage.setItem(`poll_${pollId}`, JSON.stringify(currentPollData));
-            
-            const container = document.getElementById('pollLinkContainer');
-            container.innerHTML = `
-                <div class="poll-link">
-                    <h4>Share this link with your friends:</h4>
-                    <input type="text" value="${pollUrl}" readonly onclick="this.select()">
-                    <button onclick="copyPollLink('${pollUrl}')" style="margin-top: 10px;">Copy Link</button>
-                </div>
-            `;
-        }
-
-        function copyPollLink(url) {
-            navigator.clipboard.writeText(url).then(() => {
-                alert('Poll link copied to clipboard!');
-            });
-        }
-
-        function loadPollFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const pollId = urlParams.get('poll');
-            const day = urlParams.get('day');
-            const meal = urlParams.get('meal');
-            
-            if (pollId && day && meal) {
-                switchTab('poll');
-                document.querySelectorAll('.tab')[1].classList.add('active');
-                showPollVoting(pollId, day, meal);
-            }
-        }
-
-        function showPollVoting(pollId, day, meal) {
-            document.getElementById('pollCreation').style.display = 'none';
-            document.getElementById('pollVoting').style.display = 'block';
-            
-            const menuData = mockMenuData[day][meal];
-            let html = '';
-            
-            for (const [hall, items] of Object.entries(menuData)) {
-                html += `
-                    <div class="dining-hall-option">
-                        <h3>${hall} Dining Hall</h3>
-                        <div class="menu-items">
-                `;
-                
-                items.forEach((item, index) => {
-                    const itemId = `${hall}_${index}`;
+            if (results.length === 0) {
+                resultsContainer.innerHTML = `<div class="error">No results found for "${query}". Try searching for common items like pizza, chicken, or salad.</div>`;
+            } else {
+                let html = `<h3 style="margin-bottom: 20px;">Found ${results.length} result${results.length > 1 ? 's' : ''} for "${query}"</h3>`;
+                results.forEach(result => {
                     html += `
-                        <div class="menu-item">
-                            <input type="checkbox" id="${itemId}" value="${hall}|${item}">
-                            <label for="${itemId}">${item}</label>
+                        <div class="result-card">
+                            <h3>${result.item}</h3>
+                            <div class="result-info">
+                                <span class="info-tag">🏢 ${result.hall}</span>
+                                <span class="info-tag">📅 ${result.day}</span>
+                                <span class="info-tag">🍽️ ${result.meal}</span>
+                                <span class="info-tag">🍴 ${result.category}</span>
+                            </div>
                         </div>
                     `;
                 });
-                
-                html += `
+                resultsContainer.innerHTML = html;
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            resultsContainer.innerHTML = `<div class="error">Error searching menus. Please try again. ${error.message}</div>`;
+        }
+    }
+
+    async function createPoll() {
+        const day = document.getElementById('pollDay').value;
+        const meal = document.getElementById('pollMeal').value;
+        
+        const pollId = Math.random().toString(36).substr(2, 9);
+        const pollUrl = `${window.location.href.split('?')[0]}?poll=${pollId}&day=${day}&meal=${meal}`;
+        
+        currentPollData = {
+            id: pollId,
+            day: day,
+            meal: meal,
+            votes: []
+        };
+        
+        localStorage.setItem(`poll_${pollId}`, JSON.stringify(currentPollData));
+        
+        const container = document.getElementById('pollLinkContainer');
+        container.innerHTML = `
+            <div class="poll-link">
+                <h4>Share this link with your friends:</h4>
+                <input type="text" value="${pollUrl}" readonly onclick="this.select()">
+                <button onclick="copyPollLink('${pollUrl}')" style="margin-top: 10px;">Copy Link</button>
+            </div>
+        `;
+    }
+
+    function copyPollLink(url) {
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Poll link copied to clipboard!');
+        });
+    }
+
+    function loadPollFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const pollId = urlParams.get('poll');
+        const day = urlParams.get('day');
+        const meal = urlParams.get('meal');
+        
+        if (pollId && day && meal) {
+            switchTab('poll');
+            document.querySelectorAll('.tab')[1].classList.add('active');
+            showPollVoting(pollId, day, meal);
+        }
+    }
+
+    async function showPollVoting(pollId, day, meal) {
+        document.getElementById('pollCreation').style.display = 'none';
+        document.getElementById('pollVoting').style.display = 'block';
+        
+        try {
+            const response = await fetch(`${API_URL}/menus?day=${day}`);
+            const menuData = await response.json();
+            
+            let html = '';
+            
+            for (const [hall, meals] of Object.entries(menuData)) {
+                if (meals[meal]) {
+                    html += `
+                        <div class="dining-hall-option">
+                            <h3>${hall} Dining Hall</h3>
+                            <div class="menu-items">
+                    `;
+                    
+                    const allItems = [
+                        ...meals[meal].entrees || [],
+                        ...meals[meal].sides || [],
+                        ...meals[meal].desserts || [],
+                        ...meals[meal].other || []
+                    ];
+                    
+                    allItems.forEach((item, index) => {
+                        const itemId = `${hall}_${index}`;
+                        html += `
+                            <div class="menu-item">
+                                <input type="checkbox" id="${itemId}" value="${hall}|${item}">
+                                <label for="${itemId}">${item}</label>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
+            }
+            
+            if (html === '') {
+                html = '<div class="error">No menu data available for this meal period.</div>';
             }
             
             document.getElementById('pollOptions').innerHTML = html;
             currentPollData = { id: pollId, day: day, meal: meal };
+        } catch (error) {
+            console.error('Error loading poll:', error);
+            document.getElementById('pollOptions').innerHTML = '<div class="error">Error loading menu data.</div>';
         }
+    }
 
-        function submitVote() {
-            const checkboxes = document.querySelectorAll('#pollOptions input[type="checkbox"]:checked');
-            
-            if (checkboxes.length === 0) {
-                alert('Please select at least one item!');
-                return;
-            }
-            
-            const votes = {};
-            checkboxes.forEach(cb => {
-                const [hall, item] = cb.value.split('|');
-                if (!votes[hall]) votes[hall] = [];
-                votes[hall].push(item);
-            });
-            
-            // Store vote
-            const pollData = JSON.parse(localStorage.getItem(`poll_${currentPollData.id}`)) || currentPollData;
-            if (!pollData.votes) pollData.votes = [];
-            pollData.votes.push(votes);
-            localStorage.setItem(`poll_${currentPollData.id}`, JSON.stringify(pollData));
-            
-            // Show results
-            showPollResults(pollData);
+    function submitVote() {
+        const checkboxes = document.querySelectorAll('#pollOptions input[type="checkbox"]:checked');
+        
+        if (checkboxes.length === 0) {
+            alert('Please select at least one item!');
+            return;
         }
+        
+        const votes = {};
+        checkboxes.forEach(cb => {
+            const [hall, item] = cb.value.split('|');
+            if (!votes[hall]) votes[hall] = [];
+            votes[hall].push(item);
+        });
+        
+        const pollData = JSON.parse(localStorage.getItem(`poll_${currentPollData.id}`)) || currentPollData;
+        if (!pollData.votes) pollData.votes = [];
+        pollData.votes.push(votes);
+        localStorage.setItem(`poll_${currentPollData.id}`, JSON.stringify(pollData));
+        
+        showPollResults(pollData);
+    }
 
-        function showPollResults(pollData) {
-            document.getElementById('pollVoting').style.display = 'none';
-            
-            // Calculate votes
-            const hallScores = {};
-            pollData.votes.forEach(vote => {
-                Object.keys(vote).forEach(hall => {
-                    hallScores[hall] = (hallScores[hall] || 0) + vote[hall].length;
-                });
+    function showPollResults(pollData) {
+        document.getElementById('pollVoting').style.display = 'none';
+        
+        const hallScores = {};
+        pollData.votes.forEach(vote => {
+            Object.keys(vote).forEach(hall => {
+                hallScores[hall] = (hallScores[hall] || 0) + vote[hall].length;
             });
-            
-            const sortedHalls = Object.entries(hallScores).sort((a, b) => b[1] - a[1]);
-            const winner = sortedHalls[0];
-            const totalVotes = Object.values(hallScores).reduce((a, b) => a + b, 0);
-            
-            let html = `
-                <div class="poll-results">
-                    <div class="winner">
-                        🏆 Winner: ${winner[0]} Dining Hall!
-                    </div>
-                    <div class="vote-breakdown">
-                        <h3 style="margin-bottom: 20px;">Vote Breakdown (${pollData.votes.length} voter${pollData.votes.length > 1 ? 's' : ''})</h3>
-            `;
-            
-            sortedHalls.forEach(([hall, score]) => {
-                const percentage = (score / totalVotes * 100).toFixed(1);
-                html += `
-                    <div class="vote-bar">
-                        <div class="vote-bar-label">
-                            <span>${hall}</span>
-                            <span>${score} votes</span>
-                        </div>
-                        <div class="vote-bar-fill">
-                            <div class="vote-bar-fill-inner" style="width: ${percentage}%">
-                                ${percentage}%
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
+        });
+        
+        const sortedHalls = Object.entries(hallScores).sort((a, b) => b[1] - a[1]);
+        const winner = sortedHalls[0];
+        const totalVotes = Object.values(hallScores).reduce((a, b) => a + b, 0);
+        
+        let html = `
+            <div class="poll-results">
+                <div class="winner">
+                    🏆 Winner: ${winner[0]} Dining Hall!
+                </div>
+                <div class="vote-breakdown">
+                    <h3 style="margin-bottom: 20px;">Vote Breakdown (${pollData.votes.length} voter${pollData.votes.length > 1 ? 's' : ''})</h3>
+        `;
+        
+        sortedHalls.forEach(([hall, score]) => {
+            const percentage = (score / totalVotes * 100).toFixed(1);
             html += `
+                <div class="vote-bar">
+                    <div class="vote-bar-label">
+                        <span>${hall}</span>
+                        <span>${score} votes</span>
                     </div>
-                    <button onclick="location.reload()" style="margin-top: 20px;">Create New Poll</button>
+                    <div class="vote-bar-fill">
+                        <div class="vote-bar-fill-inner" style="width: ${percentage}%">
+                            ${percentage}%
+                        </div>
+                    </div>
                 </div>
             `;
-            
-            document.getElementById('pollResultsContainer').innerHTML = html;
-        }
-
-        // Load poll if URL contains poll parameters
-        window.addEventListener('load', loadPollFromUrl);
-
-        // Allow search on Enter key
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchFood();
-            }
         });
-    </script>
+        
+        html += `
+                </div>
+                <button onclick="location.reload()" style="margin-top: 20px;">Create New Poll</button>
+            </div>
+        `;
+        
+        document.getElementById('pollResultsContainer').innerHTML = html;
+    }
+
+    window.addEventListener('load', loadPollFromUrl);
+
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchFood();
+        }
+    });
+</script>
+
 </body>
 </html>
 ```
