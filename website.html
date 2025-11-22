@@ -1,0 +1,675 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Princeton Dining Finder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            color: #ff6b35;
+            border-bottom: 3px solid #ff6b35;
+            background: white;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .service {
+            display: none;
+        }
+
+        .service.active {
+            display: block;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #ff6b35;
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ff6b35;
+        }
+
+        .result-card h3 {
+            color: #ff6b35;
+            margin-bottom: 10px;
+        }
+
+        .result-info {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .info-tag {
+            background: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #495057;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ff6b35;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .poll-creation {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .poll-link {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            word-break: break-all;
+        }
+
+        .poll-link input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .dining-hall-option {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+        }
+
+        .dining-hall-option h3 {
+            color: #ff6b35;
+            margin-bottom: 15px;
+        }
+
+        .menu-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .menu-item label {
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .poll-results {
+            margin-top: 30px;
+        }
+
+        .winner {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .vote-breakdown {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .vote-bar {
+            margin: 15px 0;
+        }
+
+        .vote-bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .vote-bar-fill {
+            background: #e9ecef;
+            height: 30px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .vote-bar-fill-inner {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            height: 100%;
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .date-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .date-selector select {
+            padding: 10px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍽️ Princeton Dining Finder</h1>
+            <p class="subtitle">Find your favorite foods across campus dining halls</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('search')">🔍 Food Search</button>
+            <button class="tab" onclick="switchTab('poll')">📊 Group Dining Poll</button>
+        </div>
+
+        <div class="content">
+            <!-- Service 1: Food Search -->
+            <div id="search" class="service active">
+                <h2 style="margin-bottom: 20px;">Search for Food Items</h2>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Enter food item (e.g., pizza, chicken, salad)...">
+                    <button onclick="searchFood()">Search</button>
+                </div>
+                <div id="searchResults"></div>
+            </div>
+
+            <!-- Service 2: Group Poll -->
+            <div id="poll" class="service">
+                <div id="pollCreation">
+                    <h2 style="margin-bottom: 20px;">Create a Group Dining Poll</h2>
+                    <div class="poll-creation">
+                        <h3>Select Date and Meal</h3>
+                        <div class="date-selector">
+                            <select id="pollDay">
+                                <option value="monday">Monday</option>
+                                <option value="tuesday">Tuesday</option>
+                                <option value="wednesday">Wednesday</option>
+                                <option value="thursday">Thursday</option>
+                                <option value="friday">Friday</option>
+                                <option value="saturday">Saturday</option>
+                                <option value="sunday">Sunday</option>
+                            </select>
+                            <select id="pollMeal">
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner">Dinner</option>
+                            </select>
+                        </div>
+                        <button onclick="createPoll()">Create Poll Link</button>
+                        <div id="pollLinkContainer"></div>
+                    </div>
+                </div>
+                <div id="pollVoting" style="display: none;">
+                    <h2 style="margin-bottom: 20px;">Vote for Your Preferences</h2>
+                    <p style="margin-bottom: 20px; color: #6c757d;">Select the items you'd like to eat from each dining hall:</p>
+                    <div id="pollOptions"></div>
+                    <button onclick="submitVote()" style="margin-top: 20px;">Submit Vote</button>
+                </div>
+                <div id="pollResultsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock data structure - In production, this would fetch from Princeton's API
+        const mockMenuData = {
+            "monday": {
+                "breakfast": {
+                    "Frist": ["Scrambled Eggs", "Bacon", "Hash Browns", "Pancakes", "Fresh Fruit", "Yogurt"],
+                    "Whitman": ["Omelets", "Sausage", "French Toast", "Bagels", "Oatmeal", "Fresh Juice"],
+                    "Butler": ["Eggs Benedict", "Turkey Bacon", "Waffles", "Granola", "Smoothies"]
+                },
+                "lunch": {
+                    "Frist": ["Chicken Sandwich", "Caesar Salad", "Tomato Soup", "French Fries", "Apple Pie"],
+                    "Whitman": ["Grilled Chicken", "Greek Salad", "Minestrone Soup", "Roasted Vegetables", "Chocolate Cake"],
+                    "Butler": ["Turkey Club", "Garden Salad", "Chicken Noodle Soup", "Sweet Potato Fries", "Ice Cream"],
+                    "CJL": ["Stir Fry Bar", "Fried Rice", "Spring Rolls", "Dumplings", "Fortune Cookies"]
+                },
+                "dinner": {
+                    "Frist": ["Grilled Salmon", "Roast Chicken", "Pasta Primavera", "Steamed Broccoli", "Tiramisu"],
+                    "Whitman": ["Beef Tenderloin", "Baked Cod", "Vegetable Lasagna", "Green Beans", "Cheesecake"],
+                    "Butler": ["BBQ Ribs", "Teriyaki Chicken", "Eggplant Parmesan", "Corn on the Cob", "Brownies"],
+                    "CJL": ["Sushi Bar", "Ramen", "Tempura", "Edamame", "Mochi Ice Cream"]
+                }
+            },
+            "tuesday": {
+                "breakfast": {
+                    "Frist": ["Scrambled Eggs", "Sausage", "Home Fries", "Waffles", "Fruit Salad", "Cereal"],
+                    "Whitman": ["Egg White Omelet", "Bacon", "Pancakes", "Muffins", "Yogurt Parfait"],
+                    "Butler": ["Breakfast Burrito", "Turkey Sausage", "French Toast", "Fresh Berries", "Coffee Cake"]
+                },
+                "lunch": {
+                    "Frist": ["Buffalo Chicken Wrap", "Spinach Salad", "Clam Chowder", "Onion Rings", "Cookies"],
+                    "Whitman": ["Philly Cheesesteak", "Cobb Salad", "Broccoli Cheddar Soup", "Tater Tots", "Fruit Tart"],
+                    "Butler": ["Chicken Tenders", "Asian Salad", "Lentil Soup", "Mac and Cheese", "Cupcakes"],
+                    "CJL": ["Poke Bowl", "Miso Soup", "California Roll", "Seaweed Salad", "Green Tea Cake"]
+                },
+                "dinner": {
+                    "Frist": ["Herb Roasted Turkey", "Grilled Shrimp", "Mushroom Risotto", "Asparagus", "Lemon Bars"],
+                    "Whitman": ["Prime Rib", "Honey Glazed Ham", "Stuffed Peppers", "Brussels Sprouts", "Apple Crisp"],
+                    "Butler": ["Chicken Parmesan", "Grilled Swordfish", "Penne Alfredo", "Zucchini", "Carrot Cake"],
+                    "CJL": ["Korean BBQ", "Bibimbap", "Kimchi", "Japchae", "Red Bean Buns"]
+                }
+            },
+            "wednesday": {
+                "breakfast": {
+                    "Frist": ["Poached Eggs", "Ham", "Potato Pancakes", "Crepes", "Melon", "Breakfast Sandwich"],
+                    "Whitman": ["Veggie Omelet", "Chicken Sausage", "Blueberry Pancakes", "Croissants", "Greek Yogurt"],
+                    "Butler": ["Huevos Rancheros", "Chorizo", "Cinnamon French Toast", "Pineapple", "Scones"]
+                },
+                "lunch": {
+                    "Frist": ["Margherita Pizza", "Caprese Salad", "Pasta e Fagioli", "Garlic Bread", "Gelato"],
+                    "Whitman": ["BBQ Chicken Pizza", "Kale Salad", "Butternut Squash Soup", "Breadsticks", "Tiramisu"],
+                    "Butler": ["Veggie Burger", "Quinoa Salad", "Black Bean Soup", "Sweet Potato Wedges", "Sorbet"],
+                    "CJL": ["Pad Thai", "Tom Yum Soup", "Summer Rolls", "Fried Bananas", "Mango Sticky Rice"]
+                },
+                "dinner": {
+                    "Frist": ["Filet Mignon", "Lobster Tail", "Wild Mushroom Ravioli", "Grilled Vegetables", "Crème Brûlée"],
+                    "Whitman": ["Pork Chops", "Baked Salmon", "Butternut Squash Ravioli", "Roasted Cauliflower", "Chocolate Mousse"],
+                    "Butler": ["Meatloaf", "Fish and Chips", "Baked Ziti", "Green Bean Casserole", "Pound Cake"],
+                    "CJL": ["Dim Sum", "Hot and Sour Soup", "Peking Duck", "Bok Choy", "Sesame Balls"]
+                }
+            }
+        };
+
+        // Replicate data for other days
+        mockMenuData.thursday = mockMenuData.monday;
+        mockMenuData.friday = mockMenuData.tuesday;
+        mockMenuData.saturday = mockMenuData.wednesday;
+        mockMenuData.sunday = mockMenuData.monday;
+
+        let currentPollData = null;
+        let pollVotes = [];
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.service').forEach(s => s.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab).classList.add('active');
+        }
+
+        function searchFood() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (!query) {
+                resultsContainer.innerHTML = '<div class="error">Please enter a food item to search.</div>';
+                return;
+            }
+
+            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Searching menus...</div>';
+
+            setTimeout(() => {
+                const results = [];
+                
+                for (const [day, meals] of Object.entries(mockMenuData)) {
+                    for (const [meal, halls] of Object.entries(meals)) {
+                        for (const [hall, items] of Object.entries(halls)) {
+                            items.forEach(item => {
+                                if (item.toLowerCase().includes(query)) {
+                                    results.push({
+                                        item: item,
+                                        hall: hall,
+                                        day: day.charAt(0).toUpperCase() + day.slice(1),
+                                        meal: meal.charAt(0).toUpperCase() + meal.slice(1)
+                                    });
+                                }
+                            });
+                        }
+                    }
+                }
+
+                if (results.length === 0) {
+                    resultsContainer.innerHTML = `<div class="error">No results found for "${query}". Try searching for common items like pizza, chicken, or salad.</div>`;
+                } else {
+                    let html = `<h3 style="margin-bottom: 20px;">Found ${results.length} result${results.length > 1 ? 's' : ''} for "${query}"</h3>`;
+                    results.forEach(result => {
+                        html += `
+                            <div class="result-card">
+                                <h3>${result.item}</h3>
+                                <div class="result-info">
+                                    <span class="info-tag">🏢 ${result.hall}</span>
+                                    <span class="info-tag">📅 ${result.day}</span>
+                                    <span class="info-tag">🍽️ ${result.meal}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    resultsContainer.innerHTML = html;
+                }
+            }, 500);
+        }
+
+        function createPoll() {
+            const day = document.getElementById('pollDay').value;
+            const meal = document.getElementById('pollMeal').value;
+            
+            const pollId = Math.random().toString(36).substr(2, 9);
+            const pollUrl = `${window.location.href.split('?')[0]}?poll=${pollId}&day=${day}&meal=${meal}`;
+            
+            currentPollData = {
+                id: pollId,
+                day: day,
+                meal: meal,
+                votes: []
+            };
+            
+            localStorage.setItem(`poll_${pollId}`, JSON.stringify(currentPollData));
+            
+            const container = document.getElementById('pollLinkContainer');
+            container.innerHTML = `
+                <div class="poll-link">
+                    <h4>Share this link with your friends:</h4>
+                    <input type="text" value="${pollUrl}" readonly onclick="this.select()">
+                    <button onclick="copyPollLink('${pollUrl}')" style="margin-top: 10px;">Copy Link</button>
+                </div>
+            `;
+        }
+
+        function copyPollLink(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Poll link copied to clipboard!');
+            });
+        }
+
+        function loadPollFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pollId = urlParams.get('poll');
+            const day = urlParams.get('day');
+            const meal = urlParams.get('meal');
+            
+            if (pollId && day && meal) {
+                switchTab('poll');
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                showPollVoting(pollId, day, meal);
+            }
+        }
+
+        function showPollVoting(pollId, day, meal) {
+            document.getElementById('pollCreation').style.display = 'none';
+            document.getElementById('pollVoting').style.display = 'block';
+            
+            const menuData = mockMenuData[day][meal];
+            let html = '';
+            
+            for (const [hall, items] of Object.entries(menuData)) {
+                html += `
+                    <div class="dining-hall-option">
+                        <h3>${hall} Dining Hall</h3>
+                        <div class="menu-items">
+                `;
+                
+                items.forEach((item, index) => {
+                    const itemId = `${hall}_${index}`;
+                    html += `
+                        <div class="menu-item">
+                            <input type="checkbox" id="${itemId}" value="${hall}|${item}">
+                            <label for="${itemId}">${item}</label>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('pollOptions').innerHTML = html;
+            currentPollData = { id: pollId, day: day, meal: meal };
+        }
+
+        function submitVote() {
+            const checkboxes = document.querySelectorAll('#pollOptions input[type="checkbox"]:checked');
+            
+            if (checkboxes.length === 0) {
+                alert('Please select at least one item!');
+                return;
+            }
+            
+            const votes = {};
+            checkboxes.forEach(cb => {
+                const [hall, item] = cb.value.split('|');
+                if (!votes[hall]) votes[hall] = [];
+                votes[hall].push(item);
+            });
+            
+            // Store vote
+            const pollData = JSON.parse(localStorage.getItem(`poll_${currentPollData.id}`)) || currentPollData;
+            if (!pollData.votes) pollData.votes = [];
+            pollData.votes.push(votes);
+            localStorage.setItem(`poll_${currentPollData.id}`, JSON.stringify(pollData));
+            
+            // Show results
+            showPollResults(pollData);
+        }
+
+        function showPollResults(pollData) {
+            document.getElementById('pollVoting').style.display = 'none';
+            
+            // Calculate votes
+            const hallScores = {};
+            pollData.votes.forEach(vote => {
+                Object.keys(vote).forEach(hall => {
+                    hallScores[hall] = (hallScores[hall] || 0) + vote[hall].length;
+                });
+            });
+            
+            const sortedHalls = Object.entries(hallScores).sort((a, b) => b[1] - a[1]);
+            const winner = sortedHalls[0];
+            const totalVotes = Object.values(hallScores).reduce((a, b) => a + b, 0);
+            
+            let html = `
+                <div class="poll-results">
+                    <div class="winner">
+                        🏆 Winner: ${winner[0]} Dining Hall!
+                    </div>
+                    <div class="vote-breakdown">
+                        <h3 style="margin-bottom: 20px;">Vote Breakdown (${pollData.votes.length} voter${pollData.votes.length > 1 ? 's' : ''})</h3>
+            `;
+            
+            sortedHalls.forEach(([hall, score]) => {
+                const percentage = (score / totalVotes * 100).toFixed(1);
+                html += `
+                    <div class="vote-bar">
+                        <div class="vote-bar-label">
+                            <span>${hall}</span>
+                            <span>${score} votes</span>
+                        </div>
+                        <div class="vote-bar-fill">
+                            <div class="vote-bar-fill-inner" style="width: ${percentage}%">
+                                ${percentage}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                    <button onclick="location.reload()" style="margin-top: 20px;">Create New Poll</button>
+                </div>
+            `;
+            
+            document.getElementById('pollResultsContainer').innerHTML = html;
+        }
+
+        // Load poll if URL contains poll parameters
+        window.addEventListener('load', loadPollFromUrl);
+
+        // Allow search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchFood();
+            }
+        });
+    </script>
+</body>
+</html>
+```
